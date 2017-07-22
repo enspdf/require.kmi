@@ -1,4 +1,4 @@
-function require (path) {
+function require (path, caller_folder) {
 	var ext = path.substring(path.lastIndexOf('/'));
 
 	if(ext.indexOf(".") === -1){
@@ -12,7 +12,7 @@ function require (path) {
 		return require.modules[path].exports;
 
 	var handler = require.getHandler(ext);
-	var module = { exports: {}, path: path };
+	var module = { exports: {}, path: path, caller_folder: caller_folder };
 
 	if(handler) {
 		var res = handler(path, module);
@@ -34,9 +34,12 @@ require.modules = {};
 * `../module`-> prev_root
 */
 
-require.resolve = (path, base) => {
+require.resolve = (path, base, parent) => {
 	if(path.substr(0, 7) === "http://" || path.substr(0, 8) === "https://")
 		return path;
+
+	if(path[0] === "$")
+		base = parent;
 
 	if(path[0] === "." && path[1] === "." && path[2] === "/"){
 		while(path[0] === "." && path[1] === "." && path[2] === "/"){
@@ -63,7 +66,7 @@ require.handlers = {
 			path =`${path.substring(0, path.length - 3)}/index.js`;
 			request = $.ajax({ url: path, method: 'GET', async: false, dataType: 'text-plain' });
 		}
-		
+
 		if(request.status === 404)
 			throw "MODULE_NOT_FOUND";
 
@@ -71,12 +74,12 @@ require.handlers = {
 
 		var folder = path.substring(0, path.lastIndexOf('/'));
 		try {
-			var fn = new Function(['require', '__dirname', 'module', 'exports'], content);
+			var fn = new Function(['require', '__dirname', 'module', 'exports', 'caller_folder'], content);
 			fn.name = path;
-			fn((p) => require(require.resolve(p, folder)), folder, module, module.exports);	
+			fn((p) => require(require.resolve(p, folder, module.caller_folder), folder), folder, module, module.exports, module.caller_folder);
 		} catch (exc) {
 			var caller_line = exc.stack.split("\n")[5];
-			
+
 			console.log(`${exc.name} on ${path} => ${exc.message} at line ${caller_line.substring(caller_line.indexOf("at ") + 3, caller_line.length)}`);
 			console.log(exc.stack);
 		}
@@ -99,7 +102,7 @@ require.handlers = {
 	img: (path, module) => {
 		module.exports = $(`<img src="${path}">`);
 		module.disposable = true;
-	}, 
+	},
 	jpg: 'img', png: 'img', gif: 'img',
 
 	json: (path, module) => {
