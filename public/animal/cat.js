@@ -1,1 +1,0 @@
-exports.Scream = () => console.log("Meeeoow!");

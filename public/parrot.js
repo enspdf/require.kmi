@@ -1,1 +1,0 @@
-exports.sayHello = () => console.log('Hello Niggas!');
