@@ -50,7 +50,7 @@ require.resolve = (path, base) => {
 	if(path[0] === "/")
 		return path;
 
-	return `kmi_modules/${path}`;
+	return `node_modules/${path}`;
 }
 
 require.handlers = {
