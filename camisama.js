@@ -1,5 +1,20 @@
+/* Main Function */
 (function(){
+	/*
+	* @require(String path[, String caller_folder]) throws UNKN
+	*
+	* + Search for a module handler that matches 'path'
+	* 	- If not Exist, throw an Unknow Ex
+	* + Execute the module handler
+	*/
 	function require (path, caller_folder) {
+		caller_folder = caller_folder || '';
+		
+		if(typeof path !== "string")
+			throw { code: 'BADTYPE', message: "Module path must be a String." };
+		if(typeof caller_folder !== "string")
+			throw { code: 'BADTYPE', message: "Module caller_folder must be a String." };
+
 		var ext = path.substring(path.lastIndexOf('/'));
 
 		if(ext.indexOf(".") === -1){
@@ -24,7 +39,7 @@
 			if(!module.disposable) require.modules[path] = module
 
 			return module.exports;
-		} else throw `Unknown Extension ${ext} for ${path}`;
+		} else throw { code: 'UNKEXT', message: `Unknown Extension ${ext} for ${path}` };
 	}
 
 	require.modules = {};
