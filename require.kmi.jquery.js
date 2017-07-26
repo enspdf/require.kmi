@@ -2,7 +2,8 @@
 *	Author: "Camilo Torres"
 *	Hours Spent: 16.83
 *	Updates:
-*		26 - July - 2017 (Wednesday) 1h [2:17 - 2:07] +0.83 (50min)
+*		26 - July - 2017 (Wednesday) [2:17 - 2:07] +0.83 (50min)
+*		26 - July - 2017 (Wednesday) [17:32 - ] 
 *
 * 	PD: Hours from Updates starts from 26/07/2017
 */
@@ -143,15 +144,11 @@
 					// Function Load
 						if(!bundle) {
 							// Request file via ajax
-								var request = $.ajax({
-									url: path,
-									method: 'GET',
-									async: false,
-									dataType: 'text-plain' 
-								});
+								var request = GET(path);
+								
 							if(request.status === 404){ // If not found
 								path =`${path.substring(0, path.length - 3)}/index.js`; // Adjust path to /index.js
-								request = $.ajax({ url: path, method: 'GET', async: false, dataType: 'text-plain' }); // Request
+								request = GET(path); // Request
 							}
 
 							if(request.status === 404) // If module not found
@@ -194,7 +191,7 @@
 
 			/* Load HTML code, no cache, be aware of it, if u have some faster version, plz pull it */
 				html: (path, module) => {
-					var request = $.ajax({ url: path, method: 'GET', async: false, dataType: 'text-plain' });
+					var request = GET(path);
 					var content = request.responseText;
 
 					module.exports = $(content);
@@ -210,7 +207,7 @@
 
 			/* Load a JSON object from file (Not cached) */
 				json: (path, module) => {
-					module.exports = JSON.parse($.ajax({ url: path, method: 'GET', async: false, dataType: 'text-plain' }).responseText);
+					module.exports = JSON.parse(GET(path).responseText);
 					module.disposable = true;
 				}
 		};
@@ -222,6 +219,20 @@
 				return require.getHandler(handler);
 
 			return handler;
+		}
+
+	/* HTTP Get */
+		function GET(url){
+			var rq = new XMLHttpRequest();
+
+			rq.open('GET', url, false);
+
+			rq.send(null);
+
+			if(url.substring(0, 7) === "file") // If its file:// protocol
+				rq.status = rq.status? 404 : 200; // Set to standart... 0 = 200, anything else = 404
+
+			return rq;
 		}
 
 	/* Require Properties */
