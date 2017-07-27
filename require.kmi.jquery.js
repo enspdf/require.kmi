@@ -54,6 +54,7 @@
 					return module.exports; // return the module.exports
 				} else throw { code: 'UNKEXT', message: `Unknown Extension ${ext} for ${path}` }; // Throw if no handler found
 		 }
+
 	/* @require.resolve(String path, String base[, String parent]);
 	 *	
 	 * Resolve a relative path to an absolute one with the following rules:
@@ -152,7 +153,7 @@
 							}
 
 							if(request.status === 404) // If module not found
-								throw "MODULE_NOT_FOUND";
+								throw { code: "MODULE_NOT_FOUND", message: `Module '${path}' not found.` };
 
 							var content = request.responseText; // Get the plain text
 
@@ -194,6 +195,9 @@
 					var request = GET(path);
 					var content = request.responseText;
 
+					if(request.status === 404) // If module not found
+						throw { code: "MODULE_NOT_FOUND", message: `Module '${path}' not found.` };
+
 					module.exports = $(content);
 					module.disposable = true;
 				},
@@ -207,7 +211,12 @@
 
 			/* Load a JSON object from file (Not cached) */
 				json: (path, module) => {
-					module.exports = JSON.parse(GET(path).responseText);
+					var  request = GET(path);
+
+					if(request.status === 404) // If module not found
+						throw { code: "MODULE_NOT_FOUND", message: `Module '${path}' not found.` };
+
+					module.exports = JSON.parse(request.responseText);
 					module.disposable = true;
 				}
 		};
