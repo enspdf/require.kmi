@@ -7,7 +7,7 @@
 *
 * 	PD: Hours from Updates starts from 26/07/2017
 */
-$require = (function(){
+require = (function(){
 	/* @require(String path[, String caller_folder]) throws BADTYPE, UNKEXT
 	 *
 	 * + Check if the path has been cached
@@ -184,7 +184,7 @@ $require = (function(){
 				}
 		};
 		/* Appends CSS to head (Its cached, so just load once per path) */
-			$require.setHandler('css', (path, module) => {
+			require.setHandler('css', (path, module) => {
 				var element = document.createElement('link');
 
 				element.rel  = "stylesheet";
@@ -198,7 +198,7 @@ $require = (function(){
 			});
 
 		/* Load HTML code, no cache, be aware of it, if u have some faster version, plz pull it */
-			$require.setHandler('html', (path, module) => {
+			require.setHandler('html', (path, module) => {
 				var request = GET(path);
 				var content = request.responseText;
 
@@ -222,7 +222,7 @@ $require = (function(){
 			});
 
 		/* Load a JSON object from file (Not cached) */
-			$require.setHandler('json', (path, module) => {
+			require.setHandler('json', (path, module) => {
 				module.exports = JSON.parse(GET(path).responseText);
 				module.disposable = true;
 			});
