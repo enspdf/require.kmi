@@ -118,6 +118,16 @@ require = (function(){
 
 			return `cami_modules/${path}`; // Resolve from 'cami_modules'
 		 }
+		 
+	/* Handler wrappers */
+		require.setHandler = (ext, fn) => require.handlers[ext.toLowerCase()] = fn;
+		require.getHandler = (ext) => {
+			var handler = require.handlers[ext.toLowerCase()];
+			if(typeof handler === 'string')
+				return require.getHandler(handler);
+
+			return handler;
+		}
 	/* Default Handlers */
 		require.handlers = {
 			/* @require.handlers.js(String path, String module) throws MODULE_NOT_FOUND
@@ -226,15 +236,6 @@ require = (function(){
 				module.exports = JSON.parse(GET(path).responseText);
 				module.disposable = true;
 			});
-	/* Handler wrappers */
-		require.setHandler = (ext, fn) => require.handlers[ext.toLowerCase()] = fn;
-		require.getHandler = (ext) => {
-			var handler = require.handlers[ext.toLowerCase()];
-			if(typeof handler === 'string')
-				return require.getHandler(handler);
-
-			return handler;
-		}
 
 	/* HTTP Get */
 		function GET(url){
