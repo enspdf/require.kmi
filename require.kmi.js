@@ -7,7 +7,7 @@
 *
 * 	PD: Hours from Updates starts from 26/07/2017
 */
-(function(){
+$require = (function(){
 	/* @require(String path[, String caller_folder]) throws BADTYPE, UNKEXT
 	 *
 	 * + Check if the path has been cached
@@ -54,6 +54,7 @@
 					return module.exports; // return the module.exports
 				} else throw { code: 'UNKEXT', message: `Unknown Extension ${ext} for ${path}` }; // Throw if no handler found
 		 }
+
 	/* @require.resolve(String path, String base[, String parent]);
 	 *	
 	 * Resolve a relative path to an absolute one with the following rules:
@@ -165,7 +166,7 @@
 								fn.name = path;
 							} catch (exc) {
 								// Print errors, is ugly as fuck! need improving!
-								console.log(`${exc.name} on ${path} => ${exc.message}`);
+								console.log(`${exc.name} on ${path} => ${exc.message} at line ${caller_line.substring(caller_line.indexOf("at ") + 3, caller_line.length)}`);
 								console.log(exc.stack);
 							}
 						} else var fn = bundle; // If there is a bundle, just use the bundle!
@@ -175,57 +176,56 @@
 						fn((p) => require(require.resolve(p, folder, module.caller_folder), folder), folder, module, module.exports, module.caller_folder);
 					} catch (exc) {
 						// Ugly debugging, plz improve
-						console.log(`${exc.name || exc.code} on ${path} => ${exc.message}`);
+						var caller_line = exc.stack.split("\n")[5];
+
+						console.log(`${exc.name} on ${path} => ${exc.message} at line ${caller_line.substring(caller_line.indexOf("at ") + 3, caller_line.length)}`);
 						console.log(exc.stack);
 					}
-				},
-
-			/* Appends CSS to head (Its cached, so just load once per path) */
-				css: (path, module) => {
-					var element = document.createElement('link');
-
-					element.rel  = "stylesheet";
-					element.type = "text/css";
-					element.href = path;
-
-					document.getElementsByTagName('head')[0].append(element);
-
-
-					module.exports = { type: 'css', path: path };
-				},
-
-			/* Load HTML code, no cache, be aware of it, if u have some faster version, plz pull it */
-				html: (path, module) => {
-					var request = GET(path);
-					var content = request.responseText;
-
-					if(request.status === 404) // If module not found
-						throw { code: "MODULE_NOT_FOUND", message: `Module '${path}' not found.` };
-
-					var parser = new DOMParser();
-					var data = parser.parseFromString(content, "text/xml");
-					
-					module.exports = data.firstChild;
-					module.disposable = true;
-				},
-
-			/* Create an Image from URL (path) */
-				img: (path, module) => {
-					module.exports = new Image();
-
-					module.exports.src = path;
-
-					module.disposable = true;
-				},
-
-				jpg: 'img', png: 'img', gif: 'img', // Aliases for img, plz add more (?)
-
-			/* Load a JSON object from file (Not cached) */
-				json: (path, module) => {
-					module.exports = JSON.parse(GET(path).responseText);
-					module.disposable = true;
 				}
 		};
+		/* Appends CSS to head (Its cached, so just load once per path) */
+			$require.setHandler('css', (path, module) => {
+				var element = document.createElement('link');
+
+				element.rel  = "stylesheet";
+				element.type = "text/css";
+				element.href = path;
+
+				document.getElementsByTagName('head')[0].append(element);
+
+
+				module.exports = { type: 'css', path: path };
+			});
+
+		/* Load HTML code, no cache, be aware of it, if u have some faster version, plz pull it */
+			$require.setHandler('html', (path, module) => {
+				var request = GET(path);
+				var content = request.responseText;
+
+				if(request.status === 404) // If module not found
+					throw { code: "MODULE_NOT_FOUND", message: `Module '${path}' not found.` };
+
+				var parser = new DOMParser();
+				var data = parser.parseFromString(content, "text/xml");
+				
+				module.exports = data.firstChild;
+				module.disposable = true;
+			});
+
+		/* Create an Image from URL (path) */
+			require.setHandler('img', (path, module) => {
+				module.exports = new Image();
+
+				module.exports.src = path;
+
+				module.disposable = true;
+			});
+
+		/* Load a JSON object from file (Not cached) */
+			$require.setHandler('json', (path, module) => {
+				module.exports = JSON.parse(GET(path).responseText);
+				module.disposable = true;
+			});
 	/* Handler wrappers */
 		require.setHandler = (ext, fn) => require.handlers[ext.toLowerCase()] = fn;
 		require.getHandler = (ext) => {
@@ -255,13 +255,12 @@
 		require.bundles = {}; // Bundles, required for packing (Coming soon...)
 	
 	/* Main function (Im not sure about this, if u have a new suggestion, plz tell me) */
-		window.addEventListener('load', function () {
-			var meta = document.getElementsByTagName('meta');
+		$(function () {
+			var entry = $('meta[cami-init]').attr('cami-init');
 
-			for(var i=0, l=meta.length;i<l;i++){
-				var entry = meta[i].getAttribute('cami-init');
-				if(entry)
-					require(entry);
-			}
+			if(entry)
+				require(entry);
 		});
+
+	return require;
 })();
