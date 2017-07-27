@@ -1,11 +1,7 @@
 /*
-*	Author: "Camilo Torres"
-*	Hours Spent: 16.83
-*	Updates:
-*		26 - July - 2017 (Wednesday) [2:17 - 2:07] +0.83 (50min)
-*		26 - July - 2017 (Wednesday) [17:32 - ] 
 *
-* 	PD: Hours from Updates starts from 26/07/2017
+*	Author: "Camilo Torres"
+*
 */
 require = (function(){
 	/* @require(String path[, String caller_folder]) throws BADTYPE, UNKEXT
@@ -256,11 +252,15 @@ require = (function(){
 		require.bundles = {}; // Bundles, required for packing (Coming soon...)
 	
 	/* Main function (Im not sure about this, if u have a new suggestion, plz tell me) */
-		$(function () {
-			var entry = $('meta[cami-init]').attr('cami-init');
+		window.addEventListener('load', function () {
+			var meta = document.getElementsByTagName('meta');
 
-			if(entry)
-				require(entry);
+			for(var i=0, entry;entry=meta[i++];){
+				var path = entry.getAttribute('cami-init');
+
+				if(path)
+					require(path);
+			};
 		});
 
 	return require;
